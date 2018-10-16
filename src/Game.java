@@ -2,6 +2,7 @@
  * Space Invaders Main Program
  *
  */
+package spaceinvaders;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,20 +18,21 @@ public class Game extends Canvas {
                                                     // a key is pressed
         private boolean leftPressed = false;  // true if left arrow key currently pressed
         private boolean rightPressed = false; // true if right arrow key currently pressed
-        private boolean leftPressed2 = false;  // true if left arrow key currently pressed
-        private boolean rightPressed2 = false; // true if right arrow key currently pressed
         private boolean firePressed = false; // true if firing
-
+        private boolean upPressed = false; // true if jumping
+        private boolean jump = false;
+        private boolean up = false;
+        private long lastJump = 0;
+        private long jumpingInterval = 2000;
         private boolean gameRunning = true;
         private ArrayList entities = new ArrayList(); // list of entities
                                                       // in game
         private ArrayList removeEntities = new ArrayList(); // list of entities
                                                             // to remove this loop
-        private Entity player1;  // the first player
-        private Entity player2;  // the second player
+        private Entity ship;  // the ship
         private double moveSpeed = 600; // hor. vel. of ship (px/s)
         private long lastFire = 0; // time last shot fired
-        private long firingInterval = 500; // interval between shots (ms)
+        private long firingInterval = 300; // interval between shots (ms)
         private int alienCount; // # of aliens left on screen
 
         private String message = ""; // message to display while waiting
@@ -45,17 +47,17 @@ public class Game extends Canvas {
     	 */
     	public Game() {
     		// create a frame to contain game
-    		JFrame container = new JFrame("Castle Defense");
+    		JFrame container = new JFrame("Space invaders but every space is replaced with space and every invader is replaced by a horse, also you're playing as a traitor invader");
     
     		// get hold the content of the frame
     		JPanel panel = (JPanel) container.getContentPane();
     
     		// set up the resolution of the game
-    		panel.setPreferredSize(new Dimension(600,600));
+    		panel.setPreferredSize(new Dimension(1000,1000));
     		panel.setLayout(null);
     
     		// set up canvas size (this) and add to frame
-    		setBounds(0,0,600,600);
+    		setBounds(0,0,1000,1000);
     		panel.add(this);
     
     		// Tell AWT not to bother repainting canvas since that will
@@ -101,12 +103,22 @@ public class Game extends Canvas {
     	 */
     	private void initEntities() {
               // create the ship and put in center of screen
+              ship = new ShipEntity(this, "sprites/ship.gif", 0, 960);
+              entities.add(ship);
+    
               // create a block of aliens (5x12)
-    		player1 = new jumper(this, "sprites/ship.gif", 310, 550);
-    		entities.add(player1);
-    		player2 = new jumper(this, "sprites/ship.gif", 290, 550);
-    		entities.add(player2);
+              alienCount = 0;
+              for (int row = 0; row < 7; row++) {
+                for (int col = 0; col < 12; col++) {
+                  Entity alien = new AlienEntity(this, "sprites/alien.gif", 
+                      100 + (col * 40),
+                      50 + (row * 30));
+                  entities.add(alien);
+                  alienCount++;
+                } // for
+              } // outer for
     	} // initEntities
+
         /* Notification from a game entity that the logic of the game
          * should be run at the next opportunity 
          */
@@ -135,8 +147,51 @@ public class Game extends Canvas {
            message = "You kicked some ALIEN BUTT!  You win!";
            waitingForKeyPress = true;
          } // notifyWin
-          
 
+        /* Notification than an alien has been killed
+         */
+         public void notifyAlienKilled() {
+           alienCount--;
+           
+           if (alienCount == 0) {
+             notifyWin();
+           } // if
+           
+           // speed up existing aliens
+           for (int i=0; i < entities.size(); i++) {
+             Entity entity = (Entity) entities.get(i);
+             if (entity instanceof AlienEntity) {
+               // speed up by 2%
+               entity.setHorizontalMovement(entity.getHorizontalMovement() * 1.04);
+             } // if
+           } // for
+         } // notifyAlienKilled
+
+         
+         public void jump() {
+        	 if ((System.currentTimeMillis() - lastJump) < jumpingInterval){
+                 return;
+               } // if
+        	 System.out.println("testee");
+        	 jump = true;
+        	 up = true;
+        	 lastJump = System.currentTimeMillis();
+              
+         }
+         
+        /* Attempt to fire.*/
+        public void tryToFire() {
+          // check that we've waited long enough to fire
+          if ((System.currentTimeMillis() - lastFire) < firingInterval){
+            return;
+          } // if
+
+          // otherwise add a shot
+          lastFire = System.currentTimeMillis();
+          ShotEntity shot = new ShotEntity(this, "sprites/shot.gif", 
+                            ship.getX() + 10, ship.getY() - 30);
+          entities.add(shot);
+        } // tryToFire
 
 	/*
 	 * gameLoop
@@ -164,7 +219,7 @@ public class Game extends Canvas {
             // get graphics context for the accelerated surface and make it black
             Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
             g.setColor(Color.black);
-            g.fillRect(0,0,600,600);
+            g.fillRect(0,0,1000,1000);
 
             // move each entity
             if (!waitingForKeyPress) {
@@ -196,6 +251,27 @@ public class Game extends Canvas {
              } // inner for
            } // outer for
 
+           
+           //jump 
+           
+           if(jump == true && (System.currentTimeMillis() - lastJump) < jumpingInterval) {
+        	   System.out.println(lastJump + " " + jumpingInterval);
+        	   if((System.currentTimeMillis() - lastJump) >= jumpingInterval/2) {
+        		   up = false;
+        	   }
+        	   if(up == true) {
+        		   ship.setVerticalMovement(-30);
+        		 
+        	   } else if (ship.getY() <= 960){
+        		   ship.setVerticalMovement(30);
+        	   } 
+        	   
+           } else {
+    		   ship.setVerticalMovement(0);
+    		   jump = false;
+    	   }
+           
+           
            // remove dead entities
            entities.removeAll(removeEntities);
            removeEntities.clear();
@@ -212,8 +288,8 @@ public class Game extends Canvas {
            // if waiting for "any key press", draw message
            if (waitingForKeyPress) {
              g.setColor(Color.white);
-             g.drawString(message, (600 - g.getFontMetrics().stringWidth(message))/2, 250);
-             g.drawString("Press any key", (600 - g.getFontMetrics().stringWidth("Press any key"))/2, 300);
+             g.drawString(message, (800 - g.getFontMetrics().stringWidth(message))/2, 250);
+             g.drawString("Press any key", (800 - g.getFontMetrics().stringWidth("Press any key"))/2, 300);
            }  // if
 
             // clear graphics and flip buffer
@@ -221,19 +297,25 @@ public class Game extends Canvas {
             strategy.show();
 
             // ship should not move without user input
-            player1.setHorizontalMovement(0);
-            player2.setHorizontalMovement(0);
+            ship.setHorizontalMovement(0);
+
             // respond to user moving ship
             if ((leftPressed) && (!rightPressed)) {
-            	  player1.setHorizontalMovement(-moveSpeed);
+              ship.setHorizontalMovement(-moveSpeed);
             } else if ((rightPressed) && (!leftPressed)) {
-            	  player1.setHorizontalMovement(moveSpeed);
+              ship.setHorizontalMovement(moveSpeed);
             } // else
-            if ((leftPressed2) && (!rightPressed2)) {
-          	  player2.setHorizontalMovement(-moveSpeed);
-          } else if ((rightPressed2) && (!leftPressed2)) {
-          	  player2.setHorizontalMovement(moveSpeed);
-          } // else
+
+            
+            //if up pressed, jump
+            if (upPressed == true) {
+            	jump();
+            }
+            
+            // if spacebar pressed, try to fire
+            if (firePressed) {
+              tryToFire();
+            } // if
 
           } // while
 
@@ -290,12 +372,10 @@ public class Game extends Canvas {
                   if (e.getKeyCode() == KeyEvent.VK_SPACE) {
                     firePressed = true;
                   } // if
-                  if (e.getKeyCode() == KeyEvent.VK_A) {
-                      leftPressed2 = true;
-                    } // if
-
-                    if (e.getKeyCode() == KeyEvent.VK_D) {
-                      rightPressed2 = true;
+                  
+                  if (e.getKeyCode() == KeyEvent.VK_UP) {
+                    upPressed = true;
+                 
                     } // if
 
 		} // keyPressed
@@ -314,18 +394,14 @@ public class Game extends Canvas {
                   if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
                     rightPressed = false;
                   } // if
-                  
-                  if (e.getKeyCode() == KeyEvent.VK_A) {
-                      leftPressed2 = false;
-                    } // if
-
-                    if (e.getKeyCode() == KeyEvent.VK_D) {
-                      rightPressed2 = false;
-                    } // if
 
                   if (e.getKeyCode() == KeyEvent.VK_SPACE) {
                     firePressed = false;
                   } // if
+                  
+                  if (e.getKeyCode() == KeyEvent.VK_UP) {
+                      upPressed = false;
+                    } // if
 
 		} // keyReleased
 
