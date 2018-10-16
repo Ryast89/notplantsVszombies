@@ -1,14 +1,4 @@
-# notplantsVszombies
-this isn't plants vs zombies
+KNOWN ISSUES
 
-
--Plants V Zombies defense?
-  -‘Lanes” that you can place defenders in
-  -Defenders have health
-  -Zombies or other enemies go down the lanes and try to reach end
-  -If they reach defenders, attack them
-  -Defenders attack zombies in different ways
-Plants: 
-  -multiple lane shooter
-  -Money collector
-  -Multiple lane shooter/AOE? (catapult)
+-Hitting side of screen COMPLETELY stops movement, including upwards. You will get stuck higher than you started if you jump at side of screen.
+-Everything else
