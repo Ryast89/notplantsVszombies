@@ -42,8 +42,8 @@
       */
      public void move(long delta) {
        // update location of entity based ov move speeds
-       x += (delta * dx) / 800;
-       y += (delta * dy) / 800;
+       x += (delta * dx) / 1700;
+       y += (delta * dy) / 1700;
      } // move
 
      // get and set velocities
