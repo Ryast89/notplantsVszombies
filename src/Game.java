@@ -19,9 +19,16 @@ public class Game extends Canvas {
         private boolean rightPressed = false; // true if right arrow key currently pressed
         private boolean leftPressed2 = false;  // true if left arrow key currently pressed
         private boolean rightPressed2 = false; // true if right arrow key currently pressed
-        private boolean firePressed = false; // true if firing
-
+        private boolean jumpPressed = false; // true if firing
+        private boolean jumpPressed2 = false; // true if firing
+        private boolean jump = false;
+        private boolean up = false;
+        private boolean jump2 = false;
+        private boolean up2 = false;
         private boolean gameRunning = true;
+        private long lastJump = 0;
+        private long lastJump2 = 0;
+        private long jumpingInterval = 1000;
         private ArrayList entities = new ArrayList(); // list of entities
                                                       // in game
         private ArrayList removeEntities = new ArrayList(); // list of entities
@@ -127,7 +134,30 @@ public class Game extends Canvas {
            message = "You DEAD!  Try again?";
            waitingForKeyPress = true;
          } // notifyDeath
+         public void jump() {
+        	 
+        	 if ((System.currentTimeMillis() - lastJump) < jumpingInterval){
 
+                 return;
+               } // if
+
+        	 jump = true;
+        	 up = true;
+        	 lastJump = System.currentTimeMillis();
+              
+         }
+         public void jump2() {
+        	 
+        	 if ((System.currentTimeMillis() - lastJump2) < jumpingInterval){
+ 
+                 return;
+               } // if
+
+        	 jump2 = true;
+        	 up2 = true;
+        	 lastJump2 = System.currentTimeMillis();
+              
+         }
 
          /* Notification that the play has killed all aliens
           */
@@ -151,11 +181,20 @@ public class Game extends Canvas {
 	 *           - checks input
 	 */
 	public void gameLoop() {
+		
           long lastLoopTime = System.currentTimeMillis();
 
           // keep loop running until game ends
           while (gameRunning) {
-            
+        	
+              if (jumpPressed == true) {
+            	 
+              	jump();
+              }
+              if (jumpPressed2 == true) {
+             	 
+                	jump2();
+                }
             // calc. time since last update, will be used to calculate
             // entities movement
             long delta = System.currentTimeMillis() - lastLoopTime;
@@ -235,7 +274,42 @@ public class Game extends Canvas {
           	  player2.setHorizontalMovement(moveSpeed);
           } // else
 
+            if(jump == true && (System.currentTimeMillis() - lastJump) < jumpingInterval) {
+            
+            	   if((System.currentTimeMillis() - lastJump) >= jumpingInterval/2) {
+            		   up = false;
+            	   }
+            	   if(up == true) {
+            		   player1.setVerticalMovement(-150);
+            		 
+            	   } else if (player1.getY() <= 600){
+            		   player1.setVerticalMovement(150);
+            	   } 
+            	   
+               } else {
+        		   player1.setVerticalMovement(0);
+        		   jump = false;
+               } 
+        	  if(jump2 == true && (System.currentTimeMillis() - lastJump2) < jumpingInterval) {
+               
+                 if((System.currentTimeMillis() - lastJump2) >= jumpingInterval/2) {
+                	 up2 = false;
+                 }
+                 	if(up2 == true) {
+                 		player2.setVerticalMovement(-150);
+                		 
+                 	} else if (player2.getY() <= 600){
+                		   player2.setVerticalMovement(150);
+                 	} 
+                	   
+        	  } else {
+        		  player2.setVerticalMovement(0);
+        		  jump2 = false;
           } // while
+         
+          
+          	}  
+          
 
 	} // gameLoop
 
@@ -254,7 +328,10 @@ public class Game extends Canvas {
             // blank out any keyboard settings that might exist
             leftPressed = false;
             rightPressed = false;
-            firePressed = false;
+            jumpPressed = false;
+            leftPressed2 = false;
+            rightPressed2 = false;
+            jumpPressed2 = false;
          } // startGame
 
 
@@ -287,8 +364,9 @@ public class Game extends Canvas {
                     rightPressed = true;
                   } // if
 
-                  if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                    firePressed = true;
+                  if (e.getKeyCode() == KeyEvent.VK_UP) {
+                    jumpPressed = true;
+                    
                   } // if
                   if (e.getKeyCode() == KeyEvent.VK_A) {
                       leftPressed2 = true;
@@ -297,6 +375,9 @@ public class Game extends Canvas {
                     if (e.getKeyCode() == KeyEvent.VK_D) {
                       rightPressed2 = true;
                     } // if
+                    if (e.getKeyCode() == KeyEvent.VK_W) {
+                        jumpPressed2 = true;
+                      } // if
 
 		} // keyPressed
 
@@ -323,9 +404,13 @@ public class Game extends Canvas {
                       rightPressed2 = false;
                     } // if
 
-                  if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                    firePressed = false;
+                  if (e.getKeyCode() == KeyEvent.VK_UP) {
+                    jumpPressed = false;
+                    
                   } // if
+                  if (e.getKeyCode() == KeyEvent.VK_W) {
+                      jumpPressed2 = false;
+                    } // if
 
 		} // keyReleased
 

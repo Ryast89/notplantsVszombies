@@ -19,12 +19,12 @@ public class jumper extends Entity {
 	   */
 	  public void move (long delta){
 	    // stop at left side of screen
-	    if ((dx < 0) && (x < 10)) {
-	      return;
+	    if ((dx < 0) && (x < 0)) {
+	      super.scroll(true);
 	    } // if
 	    // stop at right side of screen
-	    if ((dx > 0) && (x > 550)) {
-	      return;
+	    if ((dx > 0) && (x > 600)) {
+	      super.scroll(false);
 	    } // if
 
 	    super.move(delta);  // calls the move method in Entity

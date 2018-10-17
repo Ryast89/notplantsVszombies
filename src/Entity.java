@@ -34,6 +34,14 @@
        sprite = (SpriteStore.get()).getSprite(r);
      } // constructor
 
+    
+     public void scroll(boolean left) {
+    	 if(left) {
+    		x += 599 ;
+    	 } else {
+    	    x -= 599;
+    	 }
+     }
      /* move
       * input: delta - the amount of time passed in ms
       * output: none
@@ -42,8 +50,8 @@
       */
      public void move(long delta) {
        // update location of entity based ov move speeds
-       x += (delta * dx) / 800;
-       y += (delta * dy) / 800;
+       x += (delta * dx) / 1700;
+       y += (delta * dy) / 1700;
      } // move
 
      // get and set velocities
